@@ -2,8 +2,8 @@
 
 #Get Bars
 function get_bars(access_token::String; interval::String="1", unit::String="Daily", barsback::Any=nothing, firstdate::Any=nothing, lastdate::Any=nothing, sessiontemplate::String="Default")
-    if !isnothing(barsback) && (!isnothing(firstdate) || !isnothing(lastdate))
-        @assert isnothing(barsback) && isnothing(firstdate) || !isnothing(barsback) && isnothing(firstdate) "can not state both barsback and firstdate - only separately - firstdate is mutually exclusive with barsback"
+    if !isnothing(barsback) && !isnothing(firstdate)
+        @assert isnothing(barsback) && !isnothing(firstdate) || !isnothing(barsback) && isnothing(firstdate) "can not state both barsback and firstdate - only separately - firstdate is mutually exclusive with barsback"
     end
 
     # API endpoint URL
