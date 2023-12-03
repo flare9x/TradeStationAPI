@@ -34,10 +34,10 @@ function get_bars(access_token::String, symbol::String; interval::String="1", un
     construct_barcharts_url(api_endpoint,query_params)
     =#
 
-    # Example GET request with the access token included in the Authorization header
+    # GET request with the access token included in the Authorization header
     response = HTTP.get(full_url, headers = ["Authorization" => "Bearer $access_token"])
 
-    # parse the HTTP response body
+    # Parse the HTTP response body
     res = JSON3.read(IOBuffer(response.body))
     bars_data = res["Bars"]
 

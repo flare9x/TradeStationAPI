@@ -1,9 +1,3 @@
-using Test
-using HTTP
-using JSON3
-using DataFrames
-using Dates
-
 # Redirect user for authentication/authorization
 function manual_authorization_url(client_id::String, redirect_uri::String, scopes::String)
 
