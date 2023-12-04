@@ -83,19 +83,28 @@ end
 # refresh token timer 
 # each access code has an expirary of 20 minutes or 1200 seconds
 # this function will count down the seconds to a manually entered expiration duration
-# may include this an async call
-function refresh_token_timer(expiry_seconds::Int64; offset_seconds::Int64=60)
-    out_token = ""
+# it will recursivley run until a defined stopping time 
+# this can called using @async and can shut down at a specified date / time co-inciding with a trading session as eg.
+function refresh_token_timer(expiry_seconds::Int64; offset_seconds::Int64=30, client_id::String, client_secret::String, refresh_token_out::String, stop_date_time::Any=DateTime("2023-12-03T22:15:00"))
+    out_access_token = ""
+    global token_seconds_remaining = expiry_seconds
+    print("starrt token", token_seconds_remaining)
     println("Timer started for $expiry_seconds seconds.")
     for i in reverse(expiry_seconds:-1:0)
-        println("$i seconds remaining.")
+        #println("$i seconds remaining.")
         if i == (expiry_seconds-offset_seconds)  # refresh token on count down nearing expiry
             println("$offset_seconds seconds left. Executing refresh token function")
-            out_token = refresh_token_req(client_id, client_secret, refresh_token)
+            global out_access_token = refresh_token_req(client_id, client_secret, refresh_token_out)
+            println(out_access_token)
         end
         sleep(1)  # Sleep for 1 second so that each iteration is a second
+        # make available seconds remaining
+        token_seconds_remaining -= i
     end
-    println("Countdown finished.")
-    return out_token
+    println("Countdown finished - Restart Timer")
+    # Recursivley run until the stopping time
+    if now() < stop_date_time
+        refresh_token_timer(expiry_seconds; offset_seconds=2, client_id, client_secret, refresh_token_out)
+    end
+    return out_access_token
 end
-

@@ -22,7 +22,7 @@ end
 # per the Tradestation documentation - all features are in this one function 
 # there are other subsets of this function for varying cases such as market, limit only without extra conditions - see further along in the code
 function place_order(access_token::String; OrderType::String="Market", AccountID::String="123456782", Symbol::String="MSFT", Quantity::String="10",
-    TradeAction::String="BUY", TimeInForceDuration::String="DAY", 
+    TradeAction::String="BUY", TimeInForceDuration::Any=nothing, 
     TimeInForceExpiration::String="DAY", Route::Any=nothing,                                                                                                            # required
     RuleType::Any=nothing, MarketActivationRuleSymbol::Any=nothing, Predicate::Any=nothing, TriggerKey::Any=nothing, Price::Any=nothing, LogicOperator::Any=nothing,    # MarketActivationRules
     AddLiquidity::Any=nothing, AllOrNone::Any=nothing, BookOnly::Any=nothing, DiscretionaryPrice::Any=nothing,                                                          # AdvancedOptions
@@ -84,7 +84,7 @@ function place_order(access_token::String; OrderType::String="Market", AccountID
     )
 
     # traverse Dict remove pairs where value is nothing
-    payload = JSON3.write(remove_nothing(payload))
+    payload = JSON3.write(traverse_dict_remove_nothing(payload))
 
     # Define the headers with the Bearer token
     headers = Dict(
@@ -93,14 +93,17 @@ function place_order(access_token::String; OrderType::String="Market", AccountID
     )
 
     # GET request with the access token included in the Authorization header
-    res = HTTP.post(api_endpoint, headers = headers, body = payload)
+    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
 
     return res
 end
 
 # Simple market order - no other conditions
 function simple_market_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", Quantity::String="10",
-    TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::String="DAY", Route::Any=nothing)
+    TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
 
     # API endpoint URL
     api_endpoint = "$trading_api_url/orderexecution/orders"
@@ -119,7 +122,7 @@ function simple_market_order(access_token::String; AccountID::String="123456782"
     )
 
     # traverse Dict remove pairs where value is nothing
-    payload = JSON3.write(remove_nothing(payload))
+    payload = JSON3.write(traverse_dict_remove_nothing(payload))
 
     # Define the headers with the Bearer token
     headers = Dict(
@@ -128,13 +131,17 @@ function simple_market_order(access_token::String; AccountID::String="123456782"
     )
 
     # GET request with the access token included in the Authorization header
-    res = HTTP.post(api_endpoint, headers = headers, body = payload)
+    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
 
     return res
 end 
 
+# Simple limit order - no other conditions
 function simple_limit_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", LimitPrice::Float64, Quantity::String="10",
-    TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::String="DAY", Route::Any=nothing)
+    TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
 
     # API endpoint URL
     api_endpoint = "$trading_api_url/orderexecution/orders"
@@ -154,7 +161,7 @@ function simple_limit_order(access_token::String; AccountID::String="123456782",
     )
 
     # traverse Dict remove pairs where value is nothing
-    payload = JSON3.write(remove_nothing(payload))
+    payload = JSON3.write(traverse_dict_remove_nothing(payload))
 
     # Define the headers with the Bearer token
     headers = Dict(
@@ -163,7 +170,10 @@ function simple_limit_order(access_token::String; AccountID::String="123456782",
     )
 
     # GET request with the access token included in the Authorization header
-    res = HTTP.post(api_endpoint, headers = headers, body = payload)
+    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
 
     return res
 end 

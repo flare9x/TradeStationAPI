@@ -20,7 +20,7 @@ end
 
 # Recursive function to traverse the Dict and filter out key-value pairs where 'value' == nothing
 # return filtered Dict
-function traverse_dict_remove_nothing(::Dict)
+function traverse_dict_remove_nothing(dict::Dict)
     new_dict = Dict()
     for (key, value) in dict
         # check if value is a Dict
