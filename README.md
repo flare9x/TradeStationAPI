@@ -31,14 +31,19 @@ TradeStationAPI.manual_authorization_url(client_id, redirect_uri, scopes)
 This will output a URL where you can enter into a web browser in exchange for a 16 digit Authorization Code
 
 Step 2
+
 authorization_code = 16 digit Authorization Code recieived in Step 1
+
 ```julia
 TradeStationAPI.access_token_req(client_id, client_secret, authorization_code, redirect_uri)
 ```
 
 Step 3
+
 Each access token will last for 20 minutes. 
+
 However, a refresh token is long-lived. This means you do not need to continually perform the full sign-in process. A refresh token can be used, as needed, to generate new access tokens.
+
 To generate a new access token 
 ```julia
 TradeStationAPI.refresh_token_req(client_id, client_secret, refresh_token_out)
