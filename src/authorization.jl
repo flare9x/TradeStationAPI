@@ -88,7 +88,6 @@ end
 function refresh_token_timer(expiry_seconds::Int64; offset_seconds::Int64=30, client_id::String, client_secret::String, refresh_token_out::String, stop_date_time::Any=DateTime("2023-12-03T22:15:00"))
     out_access_token = ""
     global token_seconds_remaining = expiry_seconds
-    print("starrt token", token_seconds_remaining)
     println("Timer started for $expiry_seconds seconds.")
     for i in reverse(expiry_seconds:-1:0)
         #println("$i seconds remaining.")
