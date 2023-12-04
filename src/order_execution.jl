@@ -133,7 +133,6 @@ function simple_market_order(access_token::String; AccountID::String="123456782"
     return res
 end 
 
-
 function simple_limit_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", LimitPrice::Float64, Quantity::String="10",
     TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::String="DAY", Route::Any=nothing)
 

@@ -15,3 +15,7 @@ get_bars()
 ## Brokerage
 
 get_accounts(), get_balances(), get_balances_BOD(), get_historical_orders(), get_historical_orders_by_order_id(), get_orders(), get_orders_by_order_id(), get_positions(), get_wallets(), stream_wallets(), stream_orders(), stream_orders_by_id(), stream_positions()
+
+## Orders
+
+place_order(), get_routes(), simple_market_order(), simple_limit_order()
