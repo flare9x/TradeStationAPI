@@ -83,7 +83,7 @@ end
 # refresh token timer 
 # each access code has an expirary of 20 minutes or 1200 seconds
 # this function will count down the seconds to a manually entered expiration duration
-# include this an async call
+# may include this an async call
 function refresh_token_timer(expiry_seconds::Int64; offset_seconds::Int64=60)
     out_token = ""
     println("Timer started for $expiry_seconds seconds.")
