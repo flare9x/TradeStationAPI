@@ -54,11 +54,11 @@ Given each access tokens life span is 20 minutes. Inside a trading application o
 TradeStationAPI.refresh_token_timer(expiry_seconds; offset_seconds, client_id, client_secret, refresh_token_out, stop_date_time=DateTime("2023-12-03T22:15:00"))
 ```
 
-This function runs recursivley until the stop date/time. Use case may be running in a trading application and stopping at a session end. An example of calling this with @async 
+This function refreshes the access token after each countdown duration in seconds. It runs recursivley until a specified stop date/time. Use case may be running in a trading application and stopping at a session end. An example of calling this with @async 
 
 ```julia
 println("Starting refresh_token_timer()")
-task_token_refresh_timer = @async TradeStationAPI.refresh_token_timer(10; offset_seconds=2, client_id, client_secret, refresh_token_out, stop_date_time=stopping_time)
+task_token_refresh_timer = @async TradeStationAPI.refresh_token_timer(10; offset_seconds=2, client_id, client_secret, refresh_token, stop_date_time=DateTime("2023-12-03T22:15:00"))
 
 # Make other calls while refresh_token_timer runs
 println("While refresh_token_timer() is running make a request for bar data using get_bars()")

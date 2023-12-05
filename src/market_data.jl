@@ -34,3 +34,39 @@ function get_bars(access_token::String, symbol::String; interval::String="1", un
 
     return df
 end
+
+# Quote snap shots
+function get_quote_snapshots(access_token::String, symbols::String)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/marketdata/quotes"
+
+    # Construct the full URL with path and query parameters
+    full_url = "$api_endpoint/$symbols" 
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.get(full_url, headers = ["Authorization" => "Bearer $access_token"])
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end
+
+# Stream quotes
+function stream_quotes(access_token::String, symbols::String)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/marketdata/stream/quotes"
+
+    # Construct the full URL with path and query parameters
+    full_url = "$api_endpoint/$symbols" 
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.get(full_url, headers = ["Authorization" => "Bearer $access_token"])
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end
