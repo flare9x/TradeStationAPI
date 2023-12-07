@@ -143,7 +143,7 @@ end
 
 
 # Simple limit order - no other conditions
-function simple_limit_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", LimitPrice::Float64, Quantity::String="10",
+function simple_limit_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", LimitPrice::String, Quantity::String="10",
     TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
 
     # API endpoint URL
@@ -160,6 +160,46 @@ function simple_limit_order(access_token::String; AccountID::String="123456782",
             "Duration" => TimeInForceDuration,
             "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
         "Route" => Route,
+        "LimitPrice" => LimitPrice
+    )
+
+    # traverse Dict remove pairs where value is nothing
+    payload = JSON3.write(traverse_dict_remove_nothing(payload))
+
+    # Define the headers with the Bearer token
+    headers = Dict(
+        "content-type" => "application/json",
+        "Authorization" => "Bearer $access_token"
+    )
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end 
+
+
+function simple_stop_limit_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", StopPrice::String, LimitPrice::String, Quantity::String="10",
+    TradeAction::String="BUY", TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/orderexecution/orders"
+
+    # Define the query parameters
+    payload = Dict(
+        "AccountID" => AccountID, # required
+        "Symbol" => Symbol, # required
+        "Quantity" => Quantity, # required
+        "OrderType" => "StopLimit", # required
+        "TradeAction" => TradeAction, # required
+        "TimeInForce" => Dict( # required
+            "Duration" => TimeInForceDuration,
+            "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
+        "Route" => Route,
+        "StopPrice" => StopPrice,
         "LimitPrice" => LimitPrice
     )
 
