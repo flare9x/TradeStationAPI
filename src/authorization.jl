@@ -105,5 +105,4 @@ function refresh_token_timer(expiry_seconds::Int64; offset_seconds::Int64=30, cl
     if now() < stop_date_time
         refresh_token_timer(expiry_seconds; offset_seconds=2, client_id, client_secret, refresh_token_out)
     end
-    return out_access_token
 end

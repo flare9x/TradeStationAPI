@@ -24,7 +24,7 @@ end
 
 # Get balances 
 # 1 to 25 Account IDs can be specified, comma separated
-function get_balances(access_token::String; accounts::String="61999124,68910124")::JSON3.Object
+function get_balances(access_token::String, accounts::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$accounts/balances"])
@@ -49,7 +49,7 @@ end
 
 # Get balances BOD ( Beginning of Day)
 # 1 to 25 Account IDs can be specified, comma separated
-function get_balances_BOD(access_token::String; accounts::String="61999124,68910124")::JSON3.Object
+function get_balances_BOD(access_token::String, accounts::String)::JSON3.Object
     # API endpoint URL 
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$accounts/bodbalances"])
@@ -73,7 +73,7 @@ function get_balances_BOD(access_token::String; accounts::String="61999124,68910
 end
 
 # Get Historical Orders
-function get_historical_orders(access_token::String; accounts::String="61999124,68910124", since::String="2023-12-01", pageSize::Any=nothing, nextToken::Any=nothing)::JSON3.Object
+function get_historical_orders(access_token::String, accounts::String; since::String="2023-12-01", pageSize::Any=nothing, nextToken::Any=nothing)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
 
@@ -104,7 +104,7 @@ function get_historical_orders(access_token::String; accounts::String="61999124,
 end
 
 # Get Historical Orders By Order ID
-function get_historical_orders_by_order_id(access_token::String; accounts::String="61999124,68910124", orderIds::String="123456789,6B29FC40-CA47-1067-B31D-00DD010662DA")::JSON3.Object
+function get_historical_orders_by_order_id(access_token::String, accounts::String, orderIds::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$accounts/historicalorders/$orderIds?since=$since"])
@@ -127,7 +127,7 @@ end
 
 
 # Get orders
-function get_orders(access_token::String; accounts::String="61999124,68910124", pageSize::Any=nothing, nextToken::Any=nothing)::JSON3.Object
+function get_orders(access_token::String, accounts::String; pageSize::Any=nothing, nextToken::Any=nothing)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
 
@@ -156,7 +156,7 @@ function get_orders(access_token::String; accounts::String="61999124,68910124", 
 end
 
 # Get orders by order id
-function get_orders_by_order_id(access_token::String; accounts::String="61999124,68910124", orderIds::String="123456789,6B29FC40-CA47-1067-B31D-00DD010662DA")::JSON3.Object
+function get_orders_by_order_id(access_token::String, accounts::String, orderIds::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$accounts/orders/$orderIds"])
@@ -178,7 +178,7 @@ function get_orders_by_order_id(access_token::String; accounts::String="61999124
 end
 
 # Get positions
-function get_positions(access_token::String; accounts::String="61999124,68910124", symbol::String="symbol=MSFT,MSFT *")::JSON3.Object
+function get_positions(access_token::String, accounts::String, symbol::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$accounts/positions?symbol=$symbol"])
@@ -201,7 +201,7 @@ end
 
 
 # get wallets
-function get_wallets(access_token::String; account::String="61999124C")::JSON3.Object
+function get_wallets(access_token::String, account::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
     url = join(["$api_endpoint/$account/wallets"])
@@ -224,7 +224,7 @@ end
 
 
 # get wallets
-function stream_wallets(access_token::String; account::String="61999124C")::JSON3.Object
+function stream_wallets(access_token::String, account::String)
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/stream/accounts"
     url = join(["$api_endpoint/$account/wallets"])
@@ -234,20 +234,34 @@ function stream_wallets(access_token::String; account::String="61999124C")::JSON
         "Authorization" => "Bearer $access_token"
     )
 
-    # Make the GET request
-    response = HTTP.request("GET", url, headers=headers)
+    while true
+        try
+            HTTP.open("GET", url, headers=headers) do io
+                startread(io)
 
-    # Parse the HTTP response body
-    res = JSON3.read(IOBuffer(response.body))
+                while !eof(io)
+                    data = String(readavailable(io))
 
-    # index the JSON3.Object
+                    try
+                        json_dict = JSON3.read(IOBuffer(data))
+                        println(json_dict)
+                    catch e
+                        println("Error processing JSON: $e")
+                    end
+                end
+            end
+        catch e
+            println("Error during HTTP request: $e")
+        end
 
-    return res
+        println("Connection closed. Reconnecting...")
+        sleep(1)  # Add a delay before attempting to reconnect
+    end
 end
 
 
 # get orders
-function stream_orders(access_token::String; accountIds::String="61999124C")::JSON3.Object
+function stream_orders(access_token::String, accountIds::String)
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/stream/accounts"
     url = join(["$api_endpoint/$accountIds/orders"])
@@ -257,20 +271,34 @@ function stream_orders(access_token::String; accountIds::String="61999124C")::JS
         "Authorization" => "Bearer $access_token"
     )
 
-    # Make the GET request
-    response = HTTP.request("GET", url, headers=headers)
+    while true
+        try
+            HTTP.open("GET", url, headers=headers) do io
+                startread(io)
 
-    # Parse the HTTP response body
-    res = JSON3.read(IOBuffer(response.body))
+                while !eof(io)
+                    data = String(readavailable(io))
 
-    # index the JSON3.Object
+                    try
+                        json_dict = JSON3.read(IOBuffer(data))
+                        println(json_dict)
+                    catch e
+                        println("Error processing JSON: $e")
+                    end
+                end
+            end
+        catch e
+            println("Error during HTTP request: $e")
+        end
 
-    return res
+        println("Connection closed. Reconnecting...")
+        sleep(1)  # Add a delay before attempting to reconnect
+    end
 end
 
 
 # get orders by id
-function stream_orders_by_id(access_token::String; accountIds::String="61999124C", orderIds::String="123456789,6B29FC40-CA47-1067-B31D-00DD010662DA")::JSON3.Object
+function stream_orders_by_id(access_token::String, accountIds::String, orderIds::String)
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/stream/accounts"
     url = join(["$api_endpoint/$accountIds/orders/$orderIds"])
@@ -280,35 +308,61 @@ function stream_orders_by_id(access_token::String; accountIds::String="61999124C
         "Authorization" => "Bearer $access_token"
     )
 
-    # Make the GET request
-    response = HTTP.request("GET", url, headers=headers)
+    while true
+        try
+            HTTP.open("GET", url, headers=headers) do io
+                startread(io)
 
-    # Parse the HTTP response body
-    res = JSON3.read(IOBuffer(response.body))
+                while !eof(io)
+                    data = String(readavailable(io))
 
-    # index the JSON3.Object
+                    try
+                        json_dict = JSON3.read(IOBuffer(data))
+                        println(json_dict)
+                    catch e
+                        println("Error processing JSON: $e")
+                    end
+                end
+            end
+        catch e
+            println("Error during HTTP request: $e")
+        end
 
-    return res
+        println("Connection closed. Reconnecting...")
+        sleep(1)  # Add a delay before attempting to reconnect
+    end
 end
 
 # stream positions
-function stream_positions(access_token::String; accountIds::String="61999124C", changes::Bool=false)::JSON3.Object
-    # API endpoint URL
+function stream_positions(access_token::String, accountIds::String; changes::Bool=false)
     api_endpoint = "$trading_api_url/brokerage/stream/accounts"
     url = join(["$api_endpoint/$accountIds/positions?changes=$changes"])
 
-    # Define the headers with the Bearer token
-    headers = Dict(
-        "Authorization" => "Bearer $access_token"
-    )
+    headers = Dict("Authorization" => "Bearer $access_token")
 
-    # Make the GET request
-    response = HTTP.request("GET", url, headers=headers)
+    while true
+        try
+            HTTP.open("GET", url, headers=headers) do io
+                startread(io)
 
-    # Parse the HTTP response body
-    res = JSON3.read(IOBuffer(response.body))
+                while !eof(io)
+                    data = String(readavailable(io))
 
-    # index the JSON3.Object
+                    try
+                        json_dict = JSON3.read(IOBuffer(data))
+                        println(json_dict)
+                        #global open_position_qty = json_dict.Quantity
+                    catch e
+                        println("Error processing JSON: $e")
+                    end
+                end
+            end
+        catch e
+            println("Error during HTTP request: $e")
+        end
 
-    return res
+        println("Connection closed. Reconnecting...")
+        sleep(1)  # Add a delay before attempting to reconnect
+    end
+
 end

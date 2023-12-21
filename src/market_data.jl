@@ -53,20 +53,49 @@ function get_quote_snapshots(access_token::String, symbols::String)
     return res
 end
 
+
 # Stream quotes
 function stream_quotes(access_token::String, symbols::String)
-
     # API endpoint URL
     api_endpoint = "$trading_api_url/marketdata/stream/quotes"
 
     # Construct the full URL with path and query parameters
-    full_url = "$api_endpoint/$symbols" 
+    full_url = "$api_endpoint/$symbols"
 
-    # GET request with the access token included in the Authorization header
-    response = HTTP.get(full_url, headers = ["Authorization" => "Bearer $access_token"])
+    # Create headers with the access token
+    headers = Dict("Authorization" => "Bearer $access_token")
 
-    # Parse the HTTP response body
-    res = JSON3.read(IOBuffer(response.body))
+    while true
+        try
+            # Open streaming connection
+            HTTP.open("GET", full_url, headers=headers) do io
+                startread(io)
 
-    return res
+                # run while eof not true
+                while !eof(io)
+                    data = String(readavailable(io))
+
+                    try
+                        json_dict = JSON3.read(IOBuffer(data))
+                        println(json_dict)
+                        #global bid_price = json_dict.Bid
+                        #global futures_Symbol = json_dict.Symbol
+                        #global ask_price = json_dict.Ask
+                        #global last_price = json_dict.Last
+                    catch e
+                        println("Error processing JSON: $e")
+                    end
+                end
+            end
+        catch e
+            println("Error during HTTP request: $e")
+        end
+
+        # While loop exited, error of EOF true - now sleep(1) and try open the stream again
+        println("Connection closed. Reconnecting...")
+        sleep(1)  # Add a delay before attempting to reconnect
+    end
 end
+
+
+

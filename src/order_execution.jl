@@ -220,3 +220,24 @@ function simple_stop_limit_order(access_token::String; AccountID::String="123456
 
     return res
 end 
+
+
+function cancel_order(access_token::String, OrderID::String)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/orderexecution/orders/$OrderID"
+
+
+    # Define the headers with the Bearer token
+    headers = Dict(
+        "Authorization" => "Bearer $access_token"
+    )
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.delete(api_endpoint, headers = headers)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end 
