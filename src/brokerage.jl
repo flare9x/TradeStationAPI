@@ -104,10 +104,18 @@ function get_historical_orders(access_token::String, accounts::String; since::St
 end
 
 # Get Historical Orders By Order ID
-function get_historical_orders_by_order_id(access_token::String, accounts::String, orderIds::String)::JSON3.Object
+function get_historical_orders_by_order_id(access_token::String, accounts::String, orderIds::String, since::String)::JSON3.Object
     # API endpoint URL
     api_endpoint = "$trading_api_url/brokerage/accounts"
-    url = join(["$api_endpoint/$accounts/historicalorders/$orderIds?since=$since"])
+    #url = join(["$api_endpoint/$accounts/historicalorders/$orderIds?since=$since"])
+
+    query_params = Dict(
+        "since" => since
+    )
+
+    # Construct the full URL with path and query parameters
+    full_url = "$api_endpoint/$accounts/historicalorders/$orderIds?" * join([string(key) * "=" * string(value) for (key, value) in query_params if value !== nothing], "&")
+
 
     # Define the headers with the Bearer token
     headers = Dict(
@@ -115,7 +123,7 @@ function get_historical_orders_by_order_id(access_token::String, accounts::Strin
     )
 
     # Make the GET request
-    response = HTTP.request("GET", url, headers=headers)
+    response = HTTP.request("GET", full_url, headers=headers)
 
     # Parse the HTTP response body
     res = JSON3.read(IOBuffer(response.body))
@@ -124,7 +132,6 @@ function get_historical_orders_by_order_id(access_token::String, accounts::Strin
 
     return res
 end
-
 
 # Get orders
 function get_orders(access_token::String, accounts::String; pageSize::Any=nothing, nextToken::Any=nothing)::JSON3.Object

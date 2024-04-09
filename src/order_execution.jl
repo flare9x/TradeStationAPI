@@ -58,7 +58,6 @@ function place_order(access_token::String; OrderType::String="Market", AccountID
                                             "Price" => Price,
                                             "LogicOperator" => LogicOperator
                                             ),
-        ), 
         "NonDisplay" => NonDisplay,
         "PegValue" => PegValue, # Valid for Equities only.
         "ShowOnlyQuantity" => ShowOnlyQuantity, # For Equities and Futures.
@@ -68,6 +67,7 @@ function place_order(access_token::String; OrderType::String="Market", AccountID
         "TrailingStop" => Dict(
             "Quantity" => TrailingStopQuantity,
             "Percent" => TrailingStopPercent
+        ),
         ),
         "BuyingPowerWarning" => BuyingPowerWarning,
         "Legs" => Dict(
@@ -241,3 +241,147 @@ function cancel_order(access_token::String, OrderID::String)
 
     return res
 end 
+
+
+function stop_limit_bracket_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", StopPrice::String, LimitPrice::String, Quantity::String="10",
+    TradeAction::String="BUY", ExitTradeAction::String="Sell", TPLimitPrice::String, SLStopPrice::String, SLLimitPrice::String, TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/orderexecution/orders"
+
+    # Define the query parameters
+    payload = Dict(
+        "AccountID" => AccountID, # required
+        "Symbol" => Symbol, # required
+        "Quantity" => Quantity, # required
+        "OrderType" => "StopLimit", # required
+        "TradeAction" => TradeAction, # required
+        "TimeInForce" => Dict( # required
+            "Duration" => TimeInForceDuration,
+            "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
+        "Route" => Route,
+        "StopPrice" => StopPrice,
+        "LimitPrice" => LimitPrice,
+        "OSOs" => [
+            Dict(
+                "Type" => "BRK",
+                "Orders" => [
+                    Dict(
+                        "AccountID" => AccountID, # required
+                        "TimeInForce" => Dict( # required
+                        "Duration" => TimeInForceDuration,
+                        "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
+                        "Quantity" => Quantity, # required
+                        "OrderType" => "Limit", # required
+                        "TradeAction" => ExitTradeAction, # required
+                        "Route" => Route,
+                        #"StopPrice" => StopPrice,
+                        "LimitPrice" => TPLimitPrice,
+                    ),
+                    Dict(
+                        "AccountID" => AccountID, # required
+                        "TimeInForce" => Dict( # required
+                        "Duration" => TimeInForceDuration,
+                        "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
+                        "Quantity" => Quantity, # required
+                        "OrderType" => "StopLimit", # required
+                        "TradeAction" => ExitTradeAction, # required
+                        "Route" => Route,
+                        "StopPrice" => SLStopPrice,
+                        "LimitPrice" => SLLimitPrice,
+                    )
+                ])]
+    )
+
+    # traverse Dict remove pairs where value is nothing
+    payload = JSON3.write(traverse_dict_remove_nothing(payload))
+
+    # Define the headers with the Bearer token
+    headers = Dict(
+        "content-type" => "application/json",
+        "Authorization" => "Bearer $access_token"
+    )
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end 
+
+
+function cancel_order(access_token::String, OrderID::String)
+
+    # API endpoint URL
+    api_endpoint = "$trading_api_url/orderexecution/orders/$OrderID"
+
+
+    # Define the headers with the Bearer token
+    headers = Dict(
+        "Authorization" => "Bearer $access_token"
+    )
+
+    # GET request with the access token included in the Authorization header
+    response = HTTP.delete(api_endpoint, headers = headers)
+
+    # Parse the HTTP response body
+    res = JSON3.read(IOBuffer(response.body))
+
+    return res
+end 
+
+
+# bracket order here
+
+
+# stop limit highr 
+# stop limit TP 
+# stop limit SL
+#=
+
+{
+  "AccountID": "123456782",
+  "TimeInForce": {
+    "Duration": "GTC"
+  },
+  "Quantity": "10",
+  "OrderType": "Limit",
+  "Symbol": "MSFT",
+  "TradeAction": "BUY",
+  "Route": "Intelligent",
+  "LimitPrice": "330",
+  "OSOs": [
+    {
+      "Type": "BRK",
+      "Orders": [
+        {
+          "AccountID": "123456782",
+          "TimeInForce": {
+            "Duration": "GTC"
+          },
+          "Quantity": "5",
+          "OrderType": "StopMarket",
+          "Symbol": "MSFT",
+          "TradeAction": "SELL",
+          "Route": "Intelligent",
+          "StopPrice": "325"
+        },
+        {
+          "AccountID": "123456782",
+          "TimeInForce": {
+            "Duration": "GTC"
+          },
+          "Quantity": "5",
+          "OrderType": "Limit",
+          "Symbol": "MSFT",
+          "TradeAction": "SELL",
+          "Route": "Intelligent",
+          "LimitPrice": "335"
+        }
+      ]
+    },
+
+    =#
+   
