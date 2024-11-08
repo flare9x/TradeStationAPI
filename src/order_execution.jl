@@ -244,57 +244,58 @@ end
 
 
 function stop_limit_bracket_order(access_token::String; AccountID::String="123456782", Symbol::String="MSFT", StopPrice::String, LimitPrice::String, Quantity::String="10",
-    TradeAction::String="BUY", ExitTradeAction::String="Sell", TPLimitPrice::String, SLStopPrice::String, SLLimitPrice::String, TimeInForceDuration::String="DAY", TimeInForceExpiration::Any=nothing, Route::Any=nothing)
+    TradeAction::String="BUY", TPLimitPrice::String, SLStopPrice::String, TimeInForceDuration::String="DAY")
 
     # API endpoint URL
     api_endpoint = "$trading_api_url/orderexecution/orders"
 
     # Define the query parameters
     payload = Dict(
-        "AccountID" => AccountID, # required
-        "Symbol" => Symbol, # required
-        "Quantity" => Quantity, # required
+        "AccountID" => AccountID,
+        "Symbol" => Symbol,
+        "Quantity" => Quantity,
+        #"OrderType" => "Limit",
         "OrderType" => "StopLimit", # required
-        "TradeAction" => TradeAction, # required
-        "TimeInForce" => Dict( # required
-            "Duration" => TimeInForceDuration,
-            "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
-        "Route" => Route,
-        "StopPrice" => StopPrice,
         "LimitPrice" => LimitPrice,
+        "StopPrice" => StopPrice,
+        #"LimitPrice" => LimitPrice,
+        "TradeAction" => TradeAction,
+        "TimeInForce" => Dict("Duration" => TimeInForceDuration),
+        "Route" => "Intelligent",
         "OSOs" => [
             Dict(
                 "Type" => "BRK",
                 "Orders" => [
                     Dict(
-                        "AccountID" => AccountID, # required
-                        "TimeInForce" => Dict( # required
-                        "Duration" => TimeInForceDuration,
-                        "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
-                        "Quantity" => Quantity, # required
-                        "OrderType" => "Limit", # required
-                        "TradeAction" => ExitTradeAction, # required
-                        "Route" => Route,
-                        #"StopPrice" => StopPrice,
+                        "AccountID" => AccountID,
+                        "Symbol" => Symbol,
+                        "Quantity" => Quantity,
+                        "OrderType" => "Limit",
                         "LimitPrice" => TPLimitPrice,
+                        "TradeAction" => "SELL",
+                        "TimeInForce" => Dict("Duration" => TimeInForceDuration),
+                        "Route" => "Intelligent"
                     ),
                     Dict(
-                        "AccountID" => AccountID, # required
-                        "TimeInForce" => Dict( # required
-                        "Duration" => TimeInForceDuration,
-                        "Expiration" => TimeInForceExpiration), #  ISO 8601 date standard
-                        "Quantity" => Quantity, # required
-                        "OrderType" => "StopLimit", # required
-                        "TradeAction" => ExitTradeAction, # required
-                        "Route" => Route,
+                        "AccountID" => AccountID,
+                        "Symbol" => Symbol,
+                        "Quantity" => Quantity,
+                        "OrderType" => "StopMarket",
                         "StopPrice" => SLStopPrice,
-                        "LimitPrice" => SLLimitPrice,
+                        "TradeAction" => "SELL",
+                        "TimeInForce" => Dict("Duration" => TimeInForceDuration),
+                        "Route" => "Intelligent",
+                        #"AdvancedOptions" => Dict(
+                        #    "TrailingStop" => Dict("Percent" => "5.0")
+                        #)
                     )
-                ])]
+                ]
+            )
+        ]
     )
 
-    # traverse Dict remove pairs where value is nothing
-    payload = JSON3.write(traverse_dict_remove_nothing(payload))
+    # Convert the payload to JSON format
+    json_payload = JSON3.write(payload)
 
     # Define the headers with the Bearer token
     headers = Dict(
@@ -302,8 +303,8 @@ function stop_limit_bracket_order(access_token::String; AccountID::String="12345
         "Authorization" => "Bearer $access_token"
     )
 
-    # GET request with the access token included in the Authorization header
-    response = HTTP.post(api_endpoint, headers = headers, body = payload)
+    # Send the POST request
+    response = HTTP.post(api_endpoint, headers = headers, body = json_payload)
 
     # Parse the HTTP response body
     res = JSON3.read(IOBuffer(response.body))
